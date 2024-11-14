@@ -1,25 +1,82 @@
-import React, { createContext } from 'react';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"
+import React, { createContext, useEffect, useState } from 'react';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut } from "firebase/auth"
 import { auth } from '../firebase.init';
 
 export const AuthContext=createContext(null)
+const googleProvider=new GoogleAuthProvider()
 const AuthProvider = ({children}) => {
+
+    const [user,setUser]=useState(null)
+    const [loading,setLoading]=useState(true)
       const name='sagor mele nodite';
 
       const createUser=(email,password)=>
       {
+        setLoading(true)
         return createUserWithEmailAndPassword(auth,email,password)
       }
      const signInUser=(email,password)=>
      {
+        setLoading(true)
         return signInWithEmailAndPassword(auth,email,password)
      }
+
+     const signOutUser=()=>
+     {
+        setLoading(true)
+        return signOut(auth);
+     }
+
+     const signInWithGoogle=()=>
+     {
+        return signInWithPopup(auth,googleProvider)
+     }
+
+      useEffect(()=>{
+
+        const unSubscribe=onAuthStateChanged(auth,currentUser=>
+        {
+            console.log(currentUser)
+            setUser(currentUser)
+            setLoading(false)
+        })
+
+        return ()=>
+        {
+            unSubscribe();
+        }
+
+      },[])
+
+
+
+
+
+
+    //  onAuthStateChanged(auth,currentUser=>
+    //  {
+    //    if(currentUser)
+    //    {
+    //     console.log('Currently logged in user',currentUser)
+    //     setUser(currentUser)
+    //    }
+    //    else{
+    //     console.log('No user found')
+    //     setUser(null)
+    //    }
+    //  }
+    // )
 
 
     const authInfo={
        name,
+       loading,
        createUser,
-       signInUser
+       signInUser,
+       user,
+       signOutUser,
+       signInWithGoogle
+       
     }
     return (
         <AuthContext.Provider value={authInfo}>
